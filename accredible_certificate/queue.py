@@ -146,18 +146,18 @@ class CertificateGeneration(object):
             cert_mode = GeneratedCertificate.MODES.honor
             
             if forced_grade:
-                grade['grade'] = forced_grade
+                grade = forced_grade
 
             cert, __ = GeneratedCertificate.objects.get_or_create(user=student, course_id=course_id)
 
             cert.mode = cert_mode
             cert.user = student
-            cert.grade = grade['percent']
+            cert.grade = grade.percent
             cert.course_id = course_id
             cert.name = profile_name
 
             # Strip HTML from grade range label
-            grade_contents = int(grade['percent'] * 100) # convert percent to points as an integer
+            grade_contents = int(grade.percent * 100) # convert percent to points as an integer
 
             if is_whitelisted or grade_contents is not None:
 
@@ -190,7 +190,8 @@ class CertificateGeneration(object):
                     if course_name.startswith("BETA") or course_name.startswith("Beta") or course_name.startswith("beta"):
                         course_name = course_name[4:].strip()
 
-                    grade_into_string =  ''.join('{}{}'.format(key, val) for key, val in grade.items())
+                    #grade_into_string =  ''.join('{}{}'.format(key, val) for key, val in grade.items())
+                    grade_into_string = grade.letter_grade
                     payload = {
                                 "credential":
                                 {
