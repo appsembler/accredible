@@ -3,7 +3,8 @@ from lms.djangoapps.certificates.models import certificate_status_for_student
 from lms.djangoapps.certificates.models import CertificateStatuses as status
 from lms.djangoapps.certificates.models import CertificateWhitelist
 
-from courseware import grades, courses
+from courseware import courses
+from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from django.test.client import RequestFactory
 from capa.xqueue_interface import XQueueInterface
 from capa.xqueue_interface import make_xheader, make_hashkey
@@ -138,7 +139,7 @@ class CertificateGeneration(object):
 
             is_whitelisted = self.whitelist.filter(user=student, course_id=course_id, whitelist=True).exists()
 
-            grade = grades.grade(student, course)
+            grade = CourseGradeFactory().read(student, course)
             enrollment_mode, __ = CourseEnrollment.enrollment_mode_for_user(student, course_id)
             mode_is_verified = (enrollment_mode == GeneratedCertificate.MODES.verified)
             
