@@ -23,8 +23,8 @@ class AccredibleConfig(AppConfig):
         PluginURLs.CONFIG: {
             ProjectType.LMS: {
                 PluginURLs.NAMESPACE: u'accredible_certificate',
-                PluginURLs.REGEX: u'request_certificate/',
-                PluginURLs.RELATIVE_PATH: u'accredible_certificate.views.request_certificate',
+                PluginURLs.REGEX: u'^request_certificate$',
+                PluginURLs.RELATIVE_PATH: u'urls',
             }
         },
         PluginSettings.CONFIG: {
