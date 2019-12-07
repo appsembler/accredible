@@ -10,7 +10,7 @@ from capa.xqueue_interface import XQueueInterface
 from capa.xqueue_interface import make_xheader, make_hashkey
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
-from common.djangoapps.student.models import UserProfile, CourseEnrollment
+from student.models import UserProfile, CourseEnrollment
 from lms.djangoapps.verify_student.models import SoftwareSecurePhotoVerification
 import json
 import random
