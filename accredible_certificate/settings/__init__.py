@@ -1,0 +1,3 @@
+"""
+Open edX plugins settings.
+"""
