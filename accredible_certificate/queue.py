@@ -11,7 +11,9 @@ from capa.xqueue_interface import make_xheader, make_hashkey
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from student.models import UserProfile, CourseEnrollment
-from lms.djangoapps.verify_student.models import SoftwareSecurePhotoVerification
+from lms.djangoapps.verify_student.models import (
+    SoftwareSecurePhotoVerification
+)
 import json
 import random
 import logging
@@ -56,8 +58,6 @@ class CertificateGeneration(object):
 
         # Get basic auth (username/password) for
         # xqueue connection if it's in the settings
-
-
         if request is None:
             factory = RequestFactory()
             self.request = factory.get('/')
@@ -67,9 +67,17 @@ class CertificateGeneration(object):
         self.whitelist = CertificateWhitelist.objects.all()
         self.restricted = UserProfile.objects.filter(allow_certificate=False)
         self.api_key = api_key
-        
+
     @transaction.non_atomic_requests
-    def add_cert(self, student, course_id, defined_status="downloadable", course=None, forced_grade=None, template_file=None, title='None'):
+    def add_cert(
+            self,
+            student,
+            course_id,
+            defined_status="downloadable",
+            course=None,
+            forced_grade=None,
+            template_file=None,
+            title='None'):
         """
         Request a new certificate for a student.
 
@@ -97,58 +105,71 @@ class CertificateGeneration(object):
         Returns the student's status
         """
 
-        VALID_STATUSES = [status.generating,
-                            status.unavailable,
-                            status.deleted,
-                            status.error,
-                            status.notpassing]
+        VALID_STATUSES = [
+            status.generating,
+            status.unavailable,
+            status.deleted,
+            status.error,
+            status.notpassing
+        ]
 
-        cert_status = certificate_status_for_student(student, course_id)['status']
+        cert_status = certificate_status_for_student(
+            student,
+            course_id)['status']
 
         new_status = cert_status
 
         if cert_status in VALID_STATUSES:
-            # grade the student
-
-            # re-use the course passed in optionally so we don't have to re-fetch everything
-            # for every student
+            '''
+            rade the student
+            re-use the course passed in optionally
+            so we don't have to re-fetch everything
+            for every student
+            '''
             if course is None:
                 course = courses.get_course_by_id(course_id)
 
             profile = UserProfile.objects.get(user=student)
             profile_name = profile.name
-
             # Needed
             self.request.user = student
             self.request.session = {}
-
             course_name = course.display_name or course_id.to_deprecated_string()
             description = ''
-            for section_key in ['short_description', 'description','overview']:
-                loc = loc = course.location.replace(category='about', name=section_key)
+            for section_key in ['short_description', 'description', 'overview']:
+                loc = loc = course.location.replace(
+                    category='about',
+                    name=section_key
+                )
                 try:
                     if modulestore().get_item(loc).data:
                         description = modulestore().get_item(loc).data
                         break
                 except:
-                    print "this course don't have " +section_key
+                    print("this course don't have " + str(section_key))
 
             if not description:
                 description = "course_description"
-
-
-            is_whitelisted = self.whitelist.filter(user=student, course_id=course_id, whitelist=True).exists()
+            is_whitelisted = self.whitelist.filter(
+                user=student,
+                course_id=course_id,
+                whitelist=True).exists()
 
             grade = CourseGradeFactory().read(student, course)
-            enrollment_mode, __ = CourseEnrollment.enrollment_mode_for_user(student, course_id)
-            mode_is_verified = (enrollment_mode == GeneratedCertificate.MODES.verified)
-            
+            enrollment_mode, __ = CourseEnrollment.enrollment_mode_for_user(
+                student, course_id
+            )
+            mode_is_verified = (
+                enrollment_mode == GeneratedCertificate.MODES.verified
+            )
             cert_mode = GeneratedCertificate.MODES.honor
-            
             if forced_grade:
                 grade = forced_grade
 
-            cert, __ = GeneratedCertificate.objects.get_or_create(user=student, course_id=course_id)
+            cert, __ = GeneratedCertificate.objects.get_or_create(
+                user=student,
+                course_id=course_id
+            )
 
             cert.mode = cert_mode
             cert.user = student
@@ -157,7 +178,8 @@ class CertificateGeneration(object):
             cert.name = profile_name
 
             # Strip HTML from grade range label
-            grade_contents = int(grade.percent * 100) # convert percent to points as an integer
+            # convert percent to points as an integer
+            grade_contents = int(grade.percent * 100)
 
             if is_whitelisted or grade_contents is not None:
 
@@ -189,49 +211,46 @@ class CertificateGeneration(object):
                     course_name = course_name.strip()
                     if course_name.startswith("BETA") or course_name.startswith("Beta") or course_name.startswith("beta"):
                         course_name = course_name[4:].strip()
-
-                    #grade_into_string =  ''.join('{}{}'.format(key, val) for key, val in grade.items())
                     grade_into_string = grade.letter_grade
                     payload = {
-                                "credential":
-                                {
-                                    "name": course_name,
-                                    "group_name": course_name,
-                                    "description": description,
-                                    "achievement_id": contents['course_id'] ,
-                                    "course_link": "/courses/" +contents['course_id'] + "/about",
-                                    "approve": approve,
-                                    "template_name": contents['course_id'],
-                                    "grade": contents['grade'],
-                                    "recipient": {
-                                        "name": contents['name'],
-                                        "email": student.email
-                                    }
-                                }
+                        "credential":
+                        {
+                            "name": course_name,
+                            "group_name": course_name,
+                            "description": description,
+                            "achievement_id": contents['course_id'],
+                            "course_link": "/courses/" + contents['course_id'] + "/about",
+                            "approve": approve,
+                            "template_name": contents['course_id'],
+                            "grade": contents['grade'],
+                            "recipient": {
+                                "name": contents['name'],
+                                "email": student.email
                             }
+                        }
+                    }
 
                     payload = json.dumps(payload)
 
-                    r = requests.post('https://api.accredible.com/v1/credentials', payload, headers={'Authorization':'Token token=' + self.api_key, 'Content-Type':'application/json'})
-                    
+                    r = requests.post('https://api.accredible.com/v1/credentials', payload, headers={
+                                      'Authorization': 'Token token=' + self.api_key, 'Content-Type': 'application/json'})
                     if r.status_code == 200:
-                        json_response = r.json()  
+                        json_response = r.json()
                         cert.status = defined_status
                         cert.key = json_response["credential"]["id"]
                         if 'private' in json_response:
-                            cert.download_url = "https://wwww.accredible.com/" + str(json_response["credential"]["id"]) + "?key" + str(json_response["private_key"])
+                            cert.download_url = "https://wwww.accredible.com/" + \
+                                str(json_response["credential"]["id"]) + \
+                                "?key" + str(json_response["private_key"])
                         else:
-                            cert.download_url = "https://www.accredible.com/" + str(cert.key)
+                            cert.download_url = "https://www.accredible.com/" + \
+                                str(cert.key)
                         cert.save()
                     else:
                         new_status = "errors"
-                    
-
             else:
                 cert_status = status.notpassing
                 cert.status = cert_status
                 cert.save()
 
         return new_status
-
-

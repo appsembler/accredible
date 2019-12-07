@@ -8,12 +8,13 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from capa.xqueue_interface import XQUEUE_METRIC_NAME
-from lms.djangoapps.certificates.models import certificate_status_for_student, CertificateStatuses, GeneratedCertificate
+from lms.djangoapps.certificates.models import (
+    certificate_status_for_student,
+    CertificateStatuses,
+    GeneratedCertificate
+)
 from accredible_certificate.queue import CertificateGeneration
-from xmodule.course_module import CourseDescriptor
-from xmodule.modulestore.django import modulestore
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
-from util.db import outer_atomic
 from django.db import transaction
 from django.conf import settings
 
@@ -22,6 +23,7 @@ from courseware.courses import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 @transaction.non_atomic_requests
 @csrf_exempt
@@ -35,18 +37,31 @@ def request_certificate(request):
     if request.method == "POST":
         if request.user.is_authenticated():
             # Enter your api key here
-            xqci = CertificateGeneration(api_key=settings.APPSEMBLER_FEATURES['ACCREDIBLE_API_KEY'])
+            xqci = CertificateGeneration(
+                api_key=settings.APPSEMBLER_FEATURES['ACCREDIBLE_API_KEY']
+            )
             username = request.user.username
             student = User.objects.get(username=username)
-            course_key = SlashSeparatedCourseKey.from_deprecated_string(request.POST.get('course_id'))
+            course_key = SlashSeparatedCourseKey.from_deprecated_string(
+                request.POST.get('course_id')
+            )
             course = get_course(course_key)
 
-            status = certificate_status_for_student(student, course_key)['status']
+            status = certificate_status_for_student(
+                student,
+                course_key)['status']
             if status in [CertificateStatuses.unavailable, CertificateStatuses.notpassing, CertificateStatuses.error]:
-                logger.info('Grading and certification requested for user {} in course {} via /request_certificate call'.format(username, course_key))
+                logger.info(
+                    'Grading and certification requested for user {} in course {} via /request_certificate call'.format(username, course_key))
                 status = xqci.add_cert(student, course_key, course=course)
-            return HttpResponse(json.dumps({'add_status': status}), content_type='application/json')
-        return HttpResponse(json.dumps({'add_status': 'ERRORANONYMOUSUSER'}), content_type='application/json')
+            return HttpResponse(
+                json.dumps(
+                    {'add_status': status}
+                ), content_type='application/json')
+        return HttpResponse(
+            json.dumps(
+                {'add_status': 'ERRORANONYMOUSUSER'}
+            ), content_type='application/json')
 
 
 @csrf_exempt
@@ -66,7 +81,9 @@ def update_certificate(request):
         xqueue_header = json.loads(request.POST.get('xqueue_header'))
 
         try:
-            course_key = SlashSeparatedCourseKey.from_deprecated_string(xqueue_body['course_id'])
+            course_key = SlashSeparatedCourseKey.from_deprecated_string(
+                xqueue_body['course_id']
+            )
 
             cert = GeneratedCertificate.objects.get(
                 user__username=xqueue_body['username'],
@@ -87,18 +104,16 @@ def update_certificate(request):
         if 'error' in xqueue_body:
             cert.status = status.error
             if 'error_reason' in xqueue_body:
-
-                # Hopefully we will record a meaningful error
-                # here if something bad happened during the
-                # certificate generation process
-                #
-                # example:
-                #  (aamorm BerkeleyX/CS169.1x/2012_Fall)
-                #  <class 'simples3.bucket.S3Error'>:
-                #  HTTP error (reason=error(32, 'Broken pipe'), filename=None) :
-                #  certificate_agent.py:175
-
-
+                '''
+                Hopefully we will record a meaningful error
+                here if something bad happened during the
+                certificate generation process
+                example:
+                (aamorm BerkeleyX/CS169.1x/2012_Fall)
+                <class 'simples3.bucket.S3Error'>:
+                HTTP error (reason=error(32, 'Broken pipe'), filename=None) :
+                certificate_agent.py:175
+                '''
                 cert.error_reason = xqueue_body['error_reason']
         else:
             if cert.status in [status.generating, status.regenerating]:
@@ -112,9 +127,9 @@ def update_certificate(request):
                 logger.critical('Invalid state for cert update: {0}'.format(
                     cert.status))
                 return HttpResponse(json.dumps({
-                            'return_code': 1,
-                            'content': 'invalid cert status'}),
-                             content_type='application/json')
+                    'return_code': 1,
+                    'content': 'invalid cert status'}),
+                    content_type='application/json')
 
         dog_stats_api.increment(XQUEUE_METRIC_NAME, tags=[
             u'action:update_certificate',

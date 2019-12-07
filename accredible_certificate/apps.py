@@ -5,7 +5,6 @@ add entries to the Django conf settings needed to run Accredible.
 """
 
 from django.apps import AppConfig
-from django.conf import settings
 from openedx.core.djangoapps.plugins.constants import (
     ProjectType, SettingsType, PluginURLs, PluginSettings
 )
@@ -29,7 +28,9 @@ class AccredibleConfig(AppConfig):
         },
         PluginSettings.CONFIG: {
             ProjectType.LMS: {
-                SettingsType.COMMON: {PluginSettings.RELATIVE_PATH: u'settings.common'},
+                SettingsType.COMMON: {
+                    PluginSettings.RELATIVE_PATH: u'settings.common'
+                },
             }
         }
     }

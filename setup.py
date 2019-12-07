@@ -6,8 +6,8 @@ setup(
     license='MIT',
     description='Reporting and data retrieval for Open edX',
     entry_points={
-    'lms.djangoapp': [
-        'accredible_certificate = accredible_certificate.apps:AccredibleConfig',
-    ],
+        'lms.djangoapp': [
+            'accredible_certificate = accredible_certificate.apps:AccredibleConfig',
+        ],
 },
 )
