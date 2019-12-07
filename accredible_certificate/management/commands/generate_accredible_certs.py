@@ -29,35 +29,35 @@ class Command(BaseCommand):
     Per use need to think about it as when I completed that Edx Linux course now the certificate generated at that time so might be in use
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option('-c', '--course',
-                    metavar='COURSE_ID',
-                    dest='course',
-                    default=False,
-                    help='Grade and generate certificates '
-                    'for a specific course'),
-        make_option('-a', '--api_key',
-                    metavar='API_KEY',
-                    dest='api_key',
-                    default=None,
-                    help='API key for accredible Certificate, if don\'t have one'
-                    'Visit https://accredible.com/issuer/sign_up and get one'),
-        make_option('-f', '--force-gen',
-                    metavar='STATUS',
-                    dest='force',
-                    default=False,
-                    help='Will generate new certificates for only those users '
-                    'whose entry in the certificate table matches STATUS. '
-                    'STATUS can be generating, unavailable, deleted, error '
-                    'or notpassing.'),
-        make_option('-s', '--styling',
-                    metavar='STYLING',
-                    dest='styling',
-                    default=False,
-                    help='Pass True to styling if you want to desgin credentials after generating them'
-                          'Visit Accredible Management Console for editing it.'
-                          'Then Run xyz command after that student will be informed and can certificate on their dashboard'),    
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-c', '--course',
+            metavar='COURSE_ID',
+            dest='course',
+            default=False,
+            help='Grade and generate certificates '
+            'for a specific course'),
+        parser.add_argument('-a', '--api_key',
+            metavar='API_KEY',
+            dest='api_key',
+            default=None,
+            help='API key for accredible Certificate, if don\'t have one'
+            'Visit https://accredible.com/issuer/sign_up and get one'),
+        parser.add_argument('-f', '--force-gen',
+            metavar='STATUS',
+            dest='force',
+            default=False,
+            help='Will generate new certificates for only those users '
+            'whose entry in the certificate table matches STATUS. '
+            'STATUS can be generating, unavailable, deleted, error '
+            'or notpassing.'),
+        parser.add_argument('-s', '--styling',
+            metavar='STYLING',
+            dest='styling',
+            default=False,
+            help='Pass True to styling if you want to desgin credentials after generating them'
+            'Visit Accredible Management Console for editing it.'
+            'Then Run xyz command after that student will be informed and can certificate on their dashboard'),    
 
     def handle(self, *args, **options):
 

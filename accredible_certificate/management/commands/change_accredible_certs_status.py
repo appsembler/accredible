@@ -28,20 +28,21 @@ class Command(BaseCommand):
     Per use need to think about it as when I completed that Edx Linux course now the certificate generated at that time so might be in use
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option('-c', '--course',
-                    metavar='COURSE_ID',
-                    dest='course',
-                    default=False,
-                    help='Grade and generate certificates '
-                    'for a specific course'),
-        make_option('-a', '--api_key',
-                    metavar='API_KEY',
-                    dest='api_key',
-                    default=None,
-                    help='API key for accredible Certificate, if don\'t have one'
-                    'Visit https://accredible.com/issuer/sign_up and get one')                
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-c', '--course',
+            metavar='COURSE_ID',
+            dest='course',
+            default=False,
+            help='Grade and generate certificates '
+            'for a specific course'),
+        parser.add_argument(
+            '-a', '--api_key',
+            metavar='API_KEY',
+            dest='api_key',
+            default=None,
+            help='API key for accredible Certificate, if don\'t have one'
+            'Visit https://accredible.com/issuer/sign_up and get one')                
 
     def handle(self, *args, **options):
 
