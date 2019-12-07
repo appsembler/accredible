@@ -1,7 +1,7 @@
-from certificates.models import GeneratedCertificate
-from certificates.models import certificate_status_for_student
-from certificates.models import CertificateStatuses as status
-from certificates.models import CertificateWhitelist
+from lms.djangoapps.certificates.models import GeneratedCertificate
+from lms.djangoapps.certificates.models import certificate_status_for_student
+from lms.djangoapps.certificates.models import CertificateStatuses as status
+from lms.djangoapps.certificates.models import CertificateWhitelist
 
 from courseware import grades, courses
 from django.test.client import RequestFactory
@@ -9,7 +9,7 @@ from capa.xqueue_interface import XQueueInterface
 from capa.xqueue_interface import make_xheader, make_hashkey
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
-from student.models import UserProfile, CourseEnrollment
+from common.djangoapps.student.models import UserProfile, CourseEnrollment
 from lms.djangoapps.verify_student.models import SoftwareSecurePhotoVerification
 import json
 import random

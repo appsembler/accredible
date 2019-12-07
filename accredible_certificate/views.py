@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from capa.xqueue_interface import XQUEUE_METRIC_NAME
-from certificates.models import certificate_status_for_student, CertificateStatuses, GeneratedCertificate
+from lms.djangoapps.certificates.models import certificate_status_for_student, CertificateStatuses, GeneratedCertificate
 from accredible_certificate.queue import CertificateGeneration
 from xmodule.course_module import CourseDescriptor
 from xmodule.modulestore.django import modulestore

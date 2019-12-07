@@ -3,7 +3,7 @@ from management command to find all students that need certificates for
 courses that have finished, and put their cert requests to the Accredible API.
 """
 from django.core.management.base import BaseCommand, CommandError
-from certificates.models import certificate_status_for_student
+from lms.djangoapps.certificates.models import certificate_status_for_student
 from accredible_certificate.queue import CertificateGeneration
 from django.contrib.auth.models import User
 from optparse import make_option
@@ -13,7 +13,7 @@ from opaque_keys.edx.keys import CourseKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 from xmodule.course_module import CourseDescriptor
 from xmodule.modulestore.django import modulestore
-from certificates.models import CertificateStatuses
+from lms.djangoapps.certificates.models import CertificateStatuses
 import datetime
 from pytz import UTC
 
