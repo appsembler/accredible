@@ -17,6 +17,7 @@ from accredible_certificate.queue import CertificateGeneration
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 from django.db import transaction
 from django.conf import settings
+from opaque_keys.edx.keys import CourseKey
 
 from courseware.courses import (
     get_course,
@@ -42,7 +43,7 @@ def request_certificate(request):
             )
             username = request.user.username
             student = User.objects.get(username=username)
-            course_key = SlashSeparatedCourseKey.from_deprecated_string(
+            course_key = CourseKey.from_string(
                 request.POST.get('course_id')
             )
             course = get_course(course_key)
@@ -81,7 +82,7 @@ def update_certificate(request):
         xqueue_header = json.loads(request.POST.get('xqueue_header'))
 
         try:
-            course_key = SlashSeparatedCourseKey.from_deprecated_string(
+            course_key = CourseKey.from_string(
                 xqueue_body['course_id']
             )
 
