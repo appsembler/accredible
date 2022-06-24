@@ -56,4 +56,5 @@ To issue certificates and have them delivered directly to students without amend
 ### Support
 If you have any issues, suggestions or questions then please send an email to support@accredible.com or submit an issue to https://github.com/accredible/acms-php-api/issues
 
-
+### Related Repositories
+Please see the original Accredible certificate repository archived at https://github.com/accredible/accredible_certificate.
