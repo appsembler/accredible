@@ -254,3 +254,73 @@ class CertificateGeneration(object):
                 cert.save()
 
         return new_status
+
+    @transaction.non_atomic_requests
+    def regen_cert(self, student, course_id):
+        """
+        Regenrate a certificate for a user if the grade is better than
+        the current one
+        """
+        # 1. Check if the user already has a certificate for the course
+        try:
+            generated_certificate = GeneratedCertificate.objects.get(
+                user=student,
+                course_id=course_id
+            )
+        except GeneratedCertificate.DoesNotExist:
+            generated_certificate = None
+            return generated_certificate
+        # 2. Find the issued certificate
+        try:
+            headers = {
+                'Authorization': 'Token token=' + self.api_key,
+                'Content-Type': 'application/json'
+            }
+            values = """
+                {
+                    "recipient": {
+                    "email": "{email}"
+                    }
+                }
+            """.format(email=student.email)
+            cert_response = requests.post(
+                'https://api.accredible.com/v1/credentials/search',
+                headers=headers,
+                data=values
+                )
+            for credential in cert_response.json()["credentials"]:
+                if course_id in credential["course_link"]:
+                    existing_certificate = credential
+                    break
+                else:
+                    existing_certificate = None
+        except Exception as e:
+            return None
+        # 2. Find the current grade and get the new grade
+        new_grade = CourseGradeFactory().read(student, course_id)
+        if existing_certificate:
+            current_grade = existing_certificate["grade"]
+        # 3. if new grade > current grade, regenrate the certificate 
+        if new_grade.percent > current_grade:
+            # Regenerate the certificate
+            values = """
+                {
+                    "credential": {
+                    "approve": true
+                    }
+                }
+            """
+            headers = {
+                'Authorization': 'Token token=' + self.api_key,
+                'Content-Type': 'application/json'
+            }
+            payload = json.dumps(values)
+            update_response = requests.put(
+                'https://api.accredible.com/v1/credentials/' + str(existing_certificate["id"]),
+                headers=headers,
+                data=payload
+            )
+            if r.status_code == 200:
+                return True
+            else:
+                return False
