@@ -256,7 +256,7 @@ class CertificateGeneration(object):
         return new_status
 
     @transaction.non_atomic_requests
-    def regen_cert(self, student, course_id):
+    def regen_cert(self, student, course_id, course_key, course=None):
         """
         Regenrate a certificate for a user if the grade is better than
         the current one
@@ -276,40 +276,36 @@ class CertificateGeneration(object):
                 'Authorization': 'Token token=' + self.api_key,
                 'Content-Type': 'application/json'
             }
-            values = """
-                {
-                    "recipient": {
-                    "email": "{email}"
-                    }
+            values = {
+                "recipient": {
+                "email": student.email
                 }
-            """.format(email=student.email)
+            }
+            values = json.dumps(values)
             cert_response = requests.post(
                 'https://api.accredible.com/v1/credentials/search',
                 headers=headers,
                 data=values
                 )
             for credential in cert_response.json()["credentials"]:
-                if course_id in credential["course_link"]:
+                if course_key in credential["course_link"]:
                     existing_certificate = credential
                     break
-                else:
-                    existing_certificate = None
         except Exception as e:
             return None
         # 2. Find the current grade and get the new grade
-        new_grade = CourseGradeFactory().read(student, course_id)
+        new_grade = CourseGradeFactory().read(student, course)
         if existing_certificate:
-            current_grade = existing_certificate["grade"]
+            current_grade = float(existing_certificate["grade"])
         # 3. if new grade > current grade, regenrate the certificate 
-        if new_grade.percent > current_grade:
+        if new_grade.percent * 100 > current_grade:
             # Regenerate the certificate
-            values = """
-                {
+            values = {
                     "credential": {
-                    "approve": true
+                        "approve": True,
+                        "grade": new_grade.percent * 100,
                     }
                 }
-            """
             headers = {
                 'Authorization': 'Token token=' + self.api_key,
                 'Content-Type': 'application/json'
@@ -320,7 +316,7 @@ class CertificateGeneration(object):
                 headers=headers,
                 data=payload
             )
-            if r.status_code == 200:
+            if update_response.status_code == 200:
                 return True
             else:
                 return False

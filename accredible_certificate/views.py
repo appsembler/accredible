@@ -56,12 +56,11 @@ def request_certificate(request):
                     'Grading and certification requested for user {} in course {} via /request_certificate call'.format(username, course_key))
                 status = xqci.add_cert(student, course_key, course=course)
             # Check if the user already have certificate for this course
-            if status == CertificateStatuses.downloadable:
+            if status == "downloadable":
                 # If the user has better grade than the one he has already got, generate new certificate
-                if GeneratedCertificate.objects.filter(user=student, course_id=course_key).exists():
+                if GeneratedCertificate.objects.filter(user=student, course_id=course_key):
                     certificate = GeneratedCertificate.objects.get(user=student, course_id=course_key)
-                    if certificate.grade < request.POST.get('grade'):
-                        status = xqci.add_cert(student, course_key, course=course)
+                    status = xqci.regen_cert(student, course_key, request.POST.get('course_id'), course=course)
             return HttpResponse(
                 json.dumps(
                     {'add_status': status}
