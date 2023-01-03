@@ -239,11 +239,11 @@ class CertificateGeneration(object):
                         cert.status = defined_status
                         cert.key = json_response["credential"]["id"]
                         if 'private' in json_response:
-                            cert.download_url = "https://wwww.accredible.com/" + \
+                            cert.download_url = "https://www.credential.net/" + \
                                 str(json_response["credential"]["id"]) + \
                                 "?key" + str(json_response["private_key"])
                         else:
-                            cert.download_url = "https://www.accredible.com/" + \
+                            cert.download_url = "https://www.credential.net/" + \
                                 str(cert.key)
                         cert.save()
                     else:
